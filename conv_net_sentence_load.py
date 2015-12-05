@@ -7,7 +7,37 @@ import re
 import warnings
 import sys
 
+def get_idx_from_sent(sent, word_idx_map, max_l=51, k=300, filter_h=5):
+    """
+    Transforms sentence into a list of indices. Pad with zeroes.
+    """
+    x = []
+    pad = filter_h - 1
+    for i in xrange(pad):
+        x.append(0)
+    words = sent.split()
+    for word in words:
+        if word in word_idx_map:
+            x.append(word_idx_map[word])
+    while len(x) < max_l+2*pad:
+        x.append(0)
+    return x
 
+def make_idx_data_cv(revs, word_idx_map, cv, max_l=51, k=300, filter_h=5):
+    """
+    Transforms sentences into a 2-d matrix.
+    """
+    train, test = [], []
+    for rev in revs:
+        sent = get_idx_from_sent(rev["text"], word_idx_map, max_l, k, filter_h)   
+        sent.append(rev["y"])
+        if rev["split"]==cv:            
+            test.append(sent)        
+        else:  
+            train.append(sent)   
+    train = np.array(train,dtype="int")
+    test = np.array(test,dtype="int")
+    return [train, test]     
 
 if __name__=="__main__":
     print "loading data...",
@@ -30,7 +60,8 @@ if __name__=="__main__":
     activations=[Iden]
     img_h = 56 + 4 + 4
     img_w = 300
-
+    rng = np.random.RandomState(3435)
+    batch_size=50
     filter_w = img_w    
     feature_maps = hidden_units[0]
     filter_shapes = []
