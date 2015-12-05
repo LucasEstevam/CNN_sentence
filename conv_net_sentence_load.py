@@ -7,6 +7,20 @@ import re
 import warnings
 import sys
 
+def ReLU(x):
+    y = T.maximum(0.0, x)
+    return(y)
+def Sigmoid(x):
+    y = T.nnet.sigmoid(x)
+    return(y)
+def Tanh(x):
+    y = T.tanh(x)
+    return(y)
+def Iden(x):
+    y = x
+    return(y)
+
+
 def get_idx_from_sent(sent, word_idx_map, max_l=51, k=300, filter_h=5):
     """
     Transforms sentence into a list of indices. Pad with zeroes.
@@ -48,9 +62,7 @@ if __name__=="__main__":
     non_static=False
     execfile("conv_net_classes.py")    
     U = W
-        
-    datasets = make_idx_data_cv(revs, word_idx_map, i, max_l=56,k=300, filter_h=5)
-
+    
     savedparams = cPickle.load(open('classifier.save','rb'))
 
     filter_hs=[3,4,5]
