@@ -56,7 +56,7 @@ def train_conv_net(datasets,
     lr_decay = adadelta decay parameter
     """    
     rng = np.random.RandomState(3435)
-    img_h = len(datasets[0][0])-1  
+    img_h = len(datasets[0][0])-1
     filter_w = img_w    
     feature_maps = hidden_units[0]
     filter_shapes = []
@@ -316,7 +316,7 @@ if __name__=="__main__":
                               batch_size=50,
                               dropout_rate=[0.5])
         f = file('classifier.save', 'wb')
-        cPickle.dump(classifier, f, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(classifier.params, f, protocol=cPickle.HIGHEST_PROTOCOL)
         f.close()
         print "cv: " + str(i) + ", perf: " + str(perf)
         results.append(perf)  

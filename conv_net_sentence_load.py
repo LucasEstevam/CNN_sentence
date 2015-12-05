@@ -1,0 +1,72 @@
+import cPickle
+import numpy as np
+from collections import defaultdict, OrderedDict
+import theano
+import theano.tensor as T
+import re
+import warnings
+import sys
+
+
+
+if __name__=="__main__":
+    print "loading data...",
+    x = cPickle.load(open("mr.p","rb"))
+    revs, W, W2, word_idx_map, vocab = x[0], x[1], x[2], x[3], x[4]
+    print "data loaded!"
+        
+    non_static=False
+    execfile("conv_net_classes.py")    
+    U = W
+        
+    datasets = make_idx_data_cv(revs, word_idx_map, i, max_l=56,k=300, filter_h=5)
+
+    savedparams = cPickle.load(open('classifier.save','rb'))
+
+    filter_hs=[3,4,5]
+    conv_non_linear="relu"
+    hidden_units=[100,2]
+    dropout_rate=[0.5]
+    activations=[Iden]
+    img_h = 56 + 4 + 4
+    img_w = 300
+
+    filter_w = img_w    
+    feature_maps = hidden_units[0]
+    filter_shapes = []
+    pool_sizes = []
+    for filter_h in filter_hs:
+        filter_shapes.append((feature_maps, 1, filter_h, filter_w))
+        pool_sizes.append((img_h-filter_h+1, img_w-filter_w+1))
+
+#define model architecture
+    index = T.lscalar()
+    x = T.matrix('x')   
+    y = T.ivector('y')
+    Words = theano.shared(value = U, name = "Words")
+    zero_vec_tensor = T.vector()
+    zero_vec = np.zeros(img_w)
+    set_zero = theano.function([zero_vec_tensor], updates=[(Words, T.set_subtensor(Words[0,:], zero_vec_tensor))],allow_input_downcast=True)
+    layer0_input = Words[T.cast(x.flatten(),dtype="int32")].reshape((x.shape[0],1,x.shape[1],Words.shape[1]))                                  
+    conv_layers = []
+    layer1_inputs = []
+    for i in xrange(len(filter_hs)):
+        filter_shape = filter_shapes[i]
+        pool_size = pool_sizes[i]
+        conv_layer = LeNetConvPoolLayer(rng, input=layer0_input,image_shape=(batch_size, 1, img_h, img_w),
+                                filter_shape=filter_shape, poolsize=pool_size, non_linear=conv_non_linear)
+        layer1_input = conv_layer.output.flatten(2)
+        conv_layers.append(conv_layer)
+        layer1_inputs.append(layer1_input)
+    layer1_input = T.concatenate(layer1_inputs,1)
+    hidden_units[0] = feature_maps*len(filter_hs)    
+    classifier = MLPDropout(rng, input=layer1_input, layer_sizes=hidden_units, activations=activations, dropout_rates=dropout_rate)
+
+    params = classifier.params     
+    for conv_layer in conv_layers:
+        params += conv_layer.params
+    if non_static:
+        #if word vectors are allowed to change, add them as model parameters
+        params += [Words]
+
+    classifier.params = savedparams
