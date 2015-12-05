@@ -176,7 +176,7 @@ def train_conv_net(datasets,
             best_val_perf = val_perf
             test_loss = test_model_all(test_set_x,test_set_y)        
             test_perf = 1- test_loss         
-    return test_perf
+    return test_perf, classifier
 
 def shared_dataset(data_xy, borrow=True):
         """ Function that loads the dataset into shared variables
@@ -300,10 +300,10 @@ if __name__=="__main__":
         print "using: word2vec vectors"
         U = W
     results = []
-    r = range(0,10)    
+    r = range(0,1)    
     for i in r:
         datasets = make_idx_data_cv(revs, word_idx_map, i, max_l=56,k=300, filter_h=5)
-        perf = train_conv_net(datasets,
+        perf, classifier = train_conv_net(datasets,
                               U,
                               lr_decay=0.95,
                               filter_hs=[3,4,5],
@@ -315,6 +315,9 @@ if __name__=="__main__":
                               non_static=non_static,
                               batch_size=50,
                               dropout_rate=[0.5])
+        f = file('classifier.save', 'wb')
+        cPickle.dump(classifier, f, protocol=cPickle.HIGHEST_PROTOCOL)
+        f.close()
         print "cv: " + str(i) + ", perf: " + str(perf)
         results.append(perf)  
     print str(np.mean(results))
