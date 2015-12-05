@@ -113,3 +113,18 @@ if __name__=="__main__":
         params += [Words]
 
     classifier.params = savedparams
+
+    datasets = make_idx_data_cv(revs, word_idx_map, 0, max_l=56,k=300, filter_h=5)
+    test_set_x = datasets[1][:,:img_h] 
+    test_set_y = np.asarray(datasets[1][:,-1],"int32")
+    test_pred_layers = []
+    test_size = test_set_x.shape[0]
+    test_layer0_input = Words[T.cast(x.flatten(),dtype="int32")].reshape((test_size,1,img_h,Words.shape[1]))
+    for conv_layer in conv_layers:
+        test_layer0_output = conv_layer.predict(test_layer0_input, test_size)
+        test_pred_layers.append(test_layer0_output.flatten(2))
+    test_layer1_input = T.concatenate(test_pred_layers, 1)
+    test_y_pred = classifier.predict(test_layer1_input)
+    test_error = T.mean(T.neq(test_y_pred, y))
+    test_model_all = theano.function([x,y], test_error,allow_input_downcast=True)   
+    
