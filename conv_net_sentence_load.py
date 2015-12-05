@@ -105,14 +105,13 @@ if __name__=="__main__":
     hidden_units[0] = feature_maps*len(filter_hs)    
     classifier = MLPDropout(rng, input=layer1_input, layer_sizes=hidden_units, activations=activations, dropout_rates=dropout_rate)
 
-    params = classifier.params     
+    classifier.W = savedparams[0]
+    classifier.b = savedparams[1]
+    k = 2
     for conv_layer in conv_layers:
-        params += conv_layer.params
-    if non_static:
-        #if word vectors are allowed to change, add them as model parameters
-        params += [Words]
-
-    classifier.params = savedparams
+        conv_layer.W = savedparams[k]
+        conv_layer.b = savedparams[k+1]
+        k = k + 2
 
     datasets = make_idx_data_cv(revs, word_idx_map, 0, max_l=56,k=300, filter_h=5)
     test_set_x = datasets[1][:,:img_h] 
@@ -128,3 +127,6 @@ if __name__=="__main__":
     test_error = T.mean(T.neq(test_y_pred, y))
     test_model_all = theano.function([x,y], test_error,allow_input_downcast=True)   
     
+    test_loss = test_model_all(test_set_x,test_set_y) 
+    test_perf = 1- test_loss   
+    print test_perf
