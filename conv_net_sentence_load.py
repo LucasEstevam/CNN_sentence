@@ -21,6 +21,52 @@ def Iden(x):
     return(y)
 
 
+def clean_str(string, TREC=False):
+    """
+    Tokenization/string cleaning for all datasets except for SST.
+    Every dataset is lower cased except for TREC
+    """
+    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)     
+    string = re.sub(r"\'s", " \'s", string) 
+    string = re.sub(r"\'ve", " \'ve", string) 
+    string = re.sub(r"n\'t", " n\'t", string) 
+    string = re.sub(r"\'re", " \'re", string) 
+    string = re.sub(r"\'d", " \'d", string) 
+    string = re.sub(r"\'ll", " \'ll", string) 
+    string = re.sub(r",", " , ", string) 
+    string = re.sub(r"!", " ! ", string) 
+    string = re.sub(r"\(", " \( ", string) 
+    string = re.sub(r"\)", " \) ", string) 
+    string = re.sub(r"\?", " \? ", string) 
+    string = re.sub(r"\s{2,}", " ", string)    
+    return string.strip() if TREC else string.strip().lower()
+
+
+def load_bin_vec(fname, vocab):
+  """
+  Loads 300x1 word vecs from Google (Mikolov) word2vec
+  """
+  word_vecs = {}
+  with open(fname, "rb") as f:
+      header = f.readline()
+      vocab_size, layer1_size = map(int, header.split())
+      binary_len = np.dtype('float32').itemsize * layer1_size
+      for line in xrange(vocab_size):
+          word = []
+          while True:
+              ch = f.read(1)
+              if ch == ' ':
+                  word = ''.join(word)
+                  break
+              if ch != '\n':
+                  word.append(ch)   
+          if word in vocab:
+             word_vecs[word] = np.fromstring(f.read(binary_len), dtype='float32')  
+          else:
+              f.read(binary_len)
+  return word_vecs
+
+
 def get_idx_from_sent(sent, word_idx_map, max_l=51, k=300, filter_h=5):
     """
     Transforms sentence into a list of indices. Pad with zeroes.
@@ -127,6 +173,26 @@ if __name__=="__main__":
     test_error = T.mean(T.neq(test_y_pred, y))
     test_model_all = theano.function([x,y], test_error,allow_input_downcast=True)   
     
+    test_loss = test_model_all(test_set_x,test_set_y) 
+    test_perf = 1- test_loss   
+    print test_perf
+
+
+    w2v_file = "word2vec.bin"
+
+    line = "this is great."
+    rev = []
+    rev.append(line.strip())
+    orig_rev = clean_str(" ".join(rev))
+    datum  = [{"y":1, 
+              "text": orig_rev,                             
+              "num_words": len(orig_rev.split())}]
+    sent = get_idx_from_sent(orig_rev, word_idx_map, 56, k, filter_h)   
+    #yvalue
+    sent.append(1)
+    test = np.array([sent],dtype="int")
+    test_set_x = test[:,:img_h] 
+    test_set_y = np.asarray(test[:,-1],"int32")
     test_loss = test_model_all(test_set_x,test_set_y) 
     test_perf = 1- test_loss   
     print test_perf
