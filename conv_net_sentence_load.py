@@ -194,12 +194,12 @@ if __name__=="__main__":
     layer1_input = T.concatenate(layer1_inputs,1)
     hidden_units[0] = feature_maps*len(filter_hs)    
     classifier = MLPDropout(rng, input=layer1_input, layer_sizes=hidden_units, activations=activations, dropout_rates=dropout_rate)
-    classifier.params[0].set_value(savedparams[0].get_value())
-    classifier.params[1].set_value(savedparams[1].get_value())
+    classifier.params[0].set_value(savedparams[0])
+    classifier.params[1].set_value(savedparams[1])
     k = 2
     for conv_layer in conv_layers:
-        conv_layer.params[0].set_value( savedparams[k].get_value())
-        conv_layer.params[1].set_value( savedparams[k+1].get_value())
+        conv_layer.params[0].set_value( savedparams[k])
+        conv_layer.params[1].set_value( savedparams[k+1])
         k = k + 2
 
     datasets = make_idx_data_cv(revs, word_idx_map, 1, max_l=56,k=300, filter_h=5)

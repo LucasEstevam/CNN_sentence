@@ -316,7 +316,7 @@ if __name__=="__main__":
                               batch_size=50,
                               dropout_rate=[0.5])
         f = file('classifier.save', 'wb')
-        cPickle.dump(params, f, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump([p.get_value() for p in params], f, protocol=cPickle.HIGHEST_PROTOCOL)
         f.close()
         print "cv: " + str(i) + ", perf: " + str(perf)
         results.append(perf)  

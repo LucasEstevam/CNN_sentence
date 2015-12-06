@@ -113,7 +113,7 @@ def load_bin_vec(fname, vocab):
   return word_vecs
 
 
-def get_idx_from_sent(sent, word_idx_map, max_l=51, filter_h=5):
+def get_idx_from_sent(sent, word_idx_map, max_l=51, k=300, filter_h=5):
     """
     Transforms sentence into a list of indices. Pad with zeroes.
     """
@@ -152,6 +152,7 @@ class Sentimenter:
     revs, W, W2, word_idx_map, vocab = x[0], x[1], x[2], x[3], x[4]
     self.word_idx_map = word_idx_map
         
+    execfile("conv_net_classes.py")    
     U = W
     savedparams = cPickle.load(open('classifier.save','rb'))
 
@@ -190,12 +191,12 @@ class Sentimenter:
     layer1_input = T.concatenate(layer1_inputs,1)
     hidden_units[0] = feature_maps*len(filter_hs)    
     classifier = MLPDropout(rng, input=layer1_input, layer_sizes=hidden_units, activations=activations, dropout_rates=dropout_rate)
-    classifier.params[0].set_value(savedparams[0].get_value())
-    classifier.params[1].set_value(savedparams[1].get_value())
+    classifier.params[0].set_value(savedparams[0])
+    classifier.params[1].set_value(savedparams[1])
     k = 2
     for conv_layer in conv_layers:
-        conv_layer.params[0].set_value( savedparams[k].get_value())
-        conv_layer.params[1].set_value( savedparams[k+1].get_value())
+        conv_layer.params[0].set_value( savedparams[k])
+        conv_layer.params[1].set_value( savedparams[k+1])
         k = k + 2
 
     test_pred_layers = []
@@ -211,6 +212,6 @@ class Sentimenter:
 
 
   def getSentiment(self,sentence):
-    sent = get_idx_from_sent(sentence, self.word_idx_map, 56, 5)
+    sent = get_idx_from_sent(sentence, self.word_idx_map, 56, k=300, self.filter_h)
     sent = np.array([sent],dtype="int")
     return self.model(sent)
