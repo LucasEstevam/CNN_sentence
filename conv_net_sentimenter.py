@@ -113,7 +113,7 @@ def load_bin_vec(fname, vocab):
   return word_vecs
 
 
-def get_idx_from_sent(sent, word_idx_map, max_l=51, k=300, filter_h=5):
+def get_idx_from_sent(sent, word_idx_map, max_l=51, filter_h=5):
     """
     Transforms sentence into a list of indices. Pad with zeroes.
     """
@@ -212,6 +212,6 @@ class Sentimenter:
 
 
   def getSentiment(self,sentence):
-    sent = get_idx_from_sent(sentence, self.word_idx_map, 56, k=300, self.filter_h)
+    sent = get_idx_from_sent(sentence, self.word_idx_map, 56, 5)
     sent = np.array([sent],dtype="int")
     return self.model(sent)
