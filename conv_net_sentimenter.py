@@ -9,6 +9,9 @@ import sys
 import pdb
 from conv_net_classes import LeNetConvPoolLayer
 from conv_net_classes import MLPDropout
+import os
+this_dir, this_filename = os.path.split(__file__)
+
 def ReLU(x):
     y = T.maximum(0.0, x)
     return(y)
@@ -127,7 +130,7 @@ def get_idx_from_sent(sent, word_idx_map, max_l=51, filter_h=5):
             x.append(word_idx_map[word])
     while len(x) < max_l+2*pad:
         x.append(0)
-    return x
+    return x[:max_l+2*pad]
 
 def make_idx_data_cv(revs, word_idx_map, cv, max_l=51, k=300, filter_h=5):
     """
@@ -148,13 +151,14 @@ def make_idx_data_cv(revs, word_idx_map, cv, max_l=51, k=300, filter_h=5):
 
 class Sentimenter:
   def __init__(self):
-    x = cPickle.load(open("mr.p","rb"))
+    mrppath = os.path.join(this_dir, "mr.p")
+    x = cPickle.load(open(mrppath,"rb"))
     revs, W, W2, word_idx_map, vocab = x[0], x[1], x[2], x[3], x[4]
     self.word_idx_map = word_idx_map
-        
-    execfile("conv_net_classes.py")    
+            
     U = W
-    savedparams = cPickle.load(open('classifier.save','rb'))
+    classifierpath = os.path.join(this_dir, "classifier.save")
+    savedparams = cPickle.load(open(classifierpath,'rb'))
 
     filter_hs=[3,4,5]
     conv_non_linear="relu"
