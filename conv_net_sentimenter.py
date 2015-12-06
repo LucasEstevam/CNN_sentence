@@ -7,6 +7,8 @@ import re
 import warnings
 import sys
 import pdb
+from conv_net_classes import LeNetConvPoolLayer
+from conv_net_classes import MLPDropout
 def ReLU(x):
     y = T.maximum(0.0, x)
     return(y)
@@ -111,7 +113,7 @@ def load_bin_vec(fname, vocab):
   return word_vecs
 
 
-def get_idx_from_sent(sent, word_idx_map, max_l=51, k=300, filter_h=5):
+def get_idx_from_sent(sent, word_idx_map, max_l=51, filter_h=5):
     """
     Transforms sentence into a list of indices. Pad with zeroes.
     """
@@ -150,7 +152,6 @@ class Sentimenter:
     revs, W, W2, word_idx_map, vocab = x[0], x[1], x[2], x[3], x[4]
     self.word_idx_map = word_idx_map
         
-    execfile("conv_net_classes.py")    
     U = W
     savedparams = cPickle.load(open('classifier.save','rb'))
 
@@ -210,6 +211,6 @@ class Sentimenter:
 
 
   def getSentiment(self,sentence):
-    sent = get_idx_from_sent(sentence, self.word_idx_map, 56, k=300, filter_h)
+    sent = get_idx_from_sent(sentence, self.word_idx_map, 56, 5)
     sent = np.array([sent],dtype="int")
     return self.model(sent)
