@@ -88,7 +88,7 @@ def clean_str(string, TREC=False):
     string = re.sub(r"\)", " \) ", string) 
     string = re.sub(r"\?", " \? ", string) 
     string = re.sub(r"\s{2,}", " ", string)    
-    return string.strip() if TREC else string.strip().lower()
+    return string.strip().lower()
 
 
 def load_bin_vec(fname, vocab):
@@ -216,6 +216,6 @@ class Sentimenter:
 
 
   def getSentiment(self,sentence):
-    sent = get_idx_from_sent(sentence, self.word_idx_map, 56, 5)
+    sent = get_idx_from_sent(clean_str(sentence), self.word_idx_map, 56, 5)
     sent = np.array([sent],dtype="int")
     return self.model(sent)
